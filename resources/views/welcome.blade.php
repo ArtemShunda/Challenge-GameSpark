@@ -25,13 +25,17 @@
             <section id="games-view" class="view">
                 <div class="page-heading">
                     <div><p class="eyebrow">JOUW PERSOONLIJKE COLLECTIE</p><h1>Games <span class="count-pill" id="game-count">03</span></h1><p class="heading-copy">Al je avonturen op één plek.</p></div>
-                    <button class="button button-primary" id="add-game"><span class="plus">+</span> Game toevoegen</button>
+                    <a class="button button-primary" href="{{ route('games.create') }}"><span class="plus">+</span> Game toevoegen</a>
                 </div>
 
+                @if (session('success'))
+                    <div class="success-message" role="status">{{ session('success') }}</div>
+                @endif
+
                 <section class="library-stats" aria-label="Collectie samenvatting">
-                    <div class="stat-card"><span class="stat-icon icon-purple">▣</span><div><span class="stat-label">In je collectie</span><strong id="stat-total">3 games</strong></div></div>
-                    <div class="stat-card"><span class="stat-icon icon-green">◉</span><div><span class="stat-label">Uitgespeeld</span><strong id="stat-completed">1 game</strong></div></div>
-                    <div class="stat-card"><span class="stat-icon icon-orange">✦</span><div><span class="stat-label">Gemiddelde score</span><strong id="stat-rating">8,7 <small>/ 10</small></strong></div></div>
+                    <div class="stat-card"><span class="stat-icon icon-purple">▣</span><div><span class="stat-label">In je collectie</span><strong id="stat-total">{{ $games->count() }} {{ $games->count() === 1 ? 'game' : 'games' }}</strong></div></div>
+                    <div class="stat-card"><span class="stat-icon icon-green">◉</span><div><span class="stat-label">Uitgespeeld</span><strong id="stat-completed">{{ $games->where('status', 'Uitgespeeld')->count() }} games</strong></div></div>
+                    <div class="stat-card"><span class="stat-icon icon-orange">✦</span><div><span class="stat-label">Gemiddelde score</span><strong id="stat-rating">{{ number_format((float) $games->avg('rating'), 1, ',', '.') }} <small>/ 10</small></strong></div></div>
                 </section>
 
                 <section class="library-panel">
@@ -44,9 +48,19 @@
                     </div>
                     <div class="table-wrap">
                         <table><thead><tr><th class="art-column">Afbeelding</th><th>Naam</th><th>Platform</th><th>Status</th><th>Rating</th><th class="actions-column">Acties</th></tr></thead><tbody id="game-list">
-                            <tr data-name="God of War" data-platform="PlayStation" data-genre="Actie" data-status="In bezit" data-rating="9"><td><div class="game-art art-god"><span>GOD<br>OF WAR</span><i>✦</i></div></td><td><strong class="game-name">God of War</strong><small class="game-genre">Actie · Avontuur</small></td><td><span class="platform"><span class="platform-dot ps">P</span>PlayStation</span></td><td><span class="status status-owned"><i></i>In bezit</span></td><td><span class="rating"><span>★</span> 9.0</span></td><td><div class="row-actions"><button class="action-button view-game">Bekijken</button><button class="action-button edit-game">Bewerken</button><button class="action-button delete-game">Verwijderen</button></div></td></tr>
-                            <tr data-name="Hollow Knight" data-platform="PC" data-genre="Indie" data-status="Speelt nu" data-rating="8"><td><div class="game-art art-hollow"><span>HOLLOW<br>KNIGHT</span><i>◇</i></div></td><td><strong class="game-name">Hollow Knight</strong><small class="game-genre">Indie · Avontuur</small></td><td><span class="platform"><span class="platform-dot pc">⌘</span>PC</span></td><td><span class="status status-playing"><i></i>Speelt nu</span></td><td><span class="rating"><span>★</span> 8.0</span></td><td><div class="row-actions"><button class="action-button view-game">Bekijken</button><button class="action-button edit-game">Bewerken</button><button class="action-button delete-game">Verwijderen</button></div></td></tr>
-                            <tr data-name="Stardew Valley" data-platform="PC" data-genre="Indie" data-status="Uitgespeeld" data-rating="9"><td><div class="game-art art-stardew"><span>STARDEW<br>VALLEY</span><i>✿</i></div></td><td><strong class="game-name">Stardew Valley</strong><small class="game-genre">Indie · RPG</small></td><td><span class="platform"><span class="platform-dot pc">⌘</span>PC</span></td><td><span class="status status-completed"><i></i>Uitgespeeld</span></td><td><span class="rating"><span>★</span> 9.0</span></td><td><div class="row-actions"><button class="action-button view-game">Bekijken</button><button class="action-button edit-game">Bewerken</button><button class="action-button delete-game">Verwijderen</button></div></td></tr>
+                            @forelse ($games as $game)
+                                @php($statusClass = $game->status === 'Uitgespeeld' ? 'status-completed' : ($game->status === 'Speelt nu' ? 'status-playing' : 'status-owned'))
+                                <tr data-name="{{ $game->name }}" data-platform="{{ $game->platform }}" data-genre="{{ $game->genre }}" data-status="{{ $game->status }}" data-rating="{{ $game->rating }}">
+                                    <td><img class="game-art-cover" src="{{ asset('storage/'.$game->image_path) }}" alt="Cover van {{ $game->name }}"></td>
+                                    <td><strong class="game-name">{{ $game->name }}</strong><small class="game-genre">{{ $game->genre }} · {{ $game->release_year }}</small></td>
+                                    <td><span class="platform"><span class="platform-dot {{ $game->platform === 'PlayStation' ? 'ps' : 'pc' }}">{{ $game->platform === 'PlayStation' ? 'P' : ($game->platform === 'PC' ? '⌘' : 'G') }}</span>{{ $game->platform }}</span></td>
+                                    <td><span class="status {{ $statusClass }}"><i></i>{{ $game->status }}</span></td>
+                                    <td><span class="rating"><span>★</span> {{ number_format((float) $game->rating, 1) }}</span></td>
+                                    <td><div class="row-actions"><span class="action-button">—</span></div></td>
+                                </tr>
+                            @empty
+                                <tr class="no-games"><td colspan="6">Je collectie is nog leeg. Voeg je eerste game toe om te beginnen.</td></tr>
+                            @endforelse
                         </tbody></table>
                         <div class="empty-state" id="empty-state" hidden><span>⌕</span><strong>Geen games gevonden</strong><p>Pas je filters aan of voeg een nieuwe game toe.</p></div>
                     </div>
