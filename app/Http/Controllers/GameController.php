@@ -58,6 +58,15 @@ class GameController extends Controller
         return redirect()->route('games.index')->with('success', 'Game bijgewerkt.');
     }
 
+    public function destroy(Game $game): RedirectResponse
+    {
+        $imagePath = $game->image_path;
+        $game->delete();
+        Storage::disk('public')->delete($imagePath);
+
+        return redirect()->route('games.index')->with('success', 'Game verwijderd uit je collectie.');
+    }
+
     private function rules(bool $imageRequired): array
     {
         return [

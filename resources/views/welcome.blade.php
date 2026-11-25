@@ -56,7 +56,7 @@
                                     <td><span class="platform"><span class="platform-dot {{ $game->platform === 'PlayStation' ? 'ps' : 'pc' }}">{{ $game->platform === 'PlayStation' ? 'P' : ($game->platform === 'PC' ? '⌘' : 'G') }}</span>{{ $game->platform }}</span></td>
                                     <td><span class="status {{ $statusClass }}"><i></i>{{ $game->status }}</span></td>
                                     <td><span class="rating"><span>★</span> {{ number_format((float) $game->rating, 1) }}</span></td>
-                                    <td><div class="row-actions"><a class="action-button" href="{{ route('games.edit', $game) }}">Bewerken</a></div></td>
+                                    <td><div class="row-actions"><a class="action-button" href="{{ route('games.edit', $game) }}">Bewerken</a><form action="{{ route('games.destroy', $game) }}" method="POST" onsubmit="return confirm('Weet je zeker dat je {{ $game->name }} wilt verwijderen?')">@csrf @method('DELETE')<button class="action-button delete-game" type="submit">Verwijderen</button></form></div></td>
                                 </tr>
                             @empty
                                 <tr class="no-games"><td colspan="6">Je collectie is nog leeg. Voeg je eerste game toe om te beginnen.</td></tr>
