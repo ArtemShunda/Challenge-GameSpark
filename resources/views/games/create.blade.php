@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ asset('gamespark.css') }}">
 </head>
 <body>
+    @php($editing = isset($game))
     <div class="app-shell">
         <header class="topbar">
             <a class="brand" href="{{ route('games.index') }}" aria-label="GameSpark home">
@@ -24,13 +25,14 @@
         <main class="main-content">
             <button class="back-link" type="button" onclick="window.location.href='{{ route('games.index') }}'"><span>←</span> Terug naar games</button>
             <div class="form-heading">
-                <p class="eyebrow">BREID JE VERZAMELING UIT</p>
-                <h1>Game toevoegen</h1>
-                <p>Vul de gegevens van je game in.</p>
+                <p class="eyebrow">{{ $editing ? 'WERK JE COLLECTIE BIJ' : 'BREID JE VERZAMELING UIT' }}</p>
+                <h1>{{ $editing ? 'Game bewerken' : 'Game toevoegen' }}</h1>
+                <p>{{ $editing ? 'Pas de gegevens van je game aan.' : 'Vul de gegevens van je game in.' }}</p>
             </div>
 
-            <form action="{{ route('games.store') }}" method="POST" enctype="multipart/form-data" class="game-form">
+            <form action="{{ $editing ? route('games.update', $game) : route('games.store') }}" method="POST" enctype="multipart/form-data" class="game-form">
                 @csrf
+                @if ($editing) @method('PUT') @endif
                 @if ($errors->any())
                     <div class="form-errors" role="alert">
                         <strong>Controleer deze velden:</strong>
@@ -40,53 +42,54 @@
                 <div class="form-grid">
                     <label class="form-field">
                         <span>Naam game <b>*</b></span>
-                        <input name="name" required maxlength="120" value="{{ old('name') }}" placeholder="Bijv. The Legend of Zelda" autocomplete="off">
+                        <input name="name" required maxlength="120" value="{{ old('name', $game->name ?? '') }}" placeholder="Bijv. The Legend of Zelda" autocomplete="off">
                     </label>
                     <label class="form-field">
                         <span>Afbeelding <b>*</b></span>
                         <div class="upload-control">
-                            <input id="image" name="image" type="file" accept="image/*" required>
-                            <label for="image" class="upload-label"><span id="upload-name">Upload een coverafbeelding</span><span class="upload-icon">↑</span></label>
+                            <input id="image" name="image" type="file" accept="image/*" @required(!$editing)>
+                            <label for="image" class="upload-label"><span id="upload-name">{{ $editing ? 'Kies een nieuwe cover (optioneel)' : 'Upload een coverafbeelding' }}</span><span class="upload-icon">↑</span></label>
                         </div>
+                        @if ($editing)<small class="current-cover-note">Huidige cover blijft behouden als je geen nieuwe kiest.</small>@endif
                     </label>
                     <label class="form-field">
                         <span>Platform <b>*</b></span>
                         <select name="platform" required>
-                            <option value="" disabled @selected(!old('platform'))>Selecteer platform</option>
+                            <option value="" disabled @selected(!old('platform', $game->platform ?? null))>Selecteer platform</option>
                             @foreach (['PlayStation', 'PC', 'Xbox', 'Nintendo Switch'] as $platform)
-                                <option value="{{ $platform }}" @selected(old('platform') === $platform)>{{ $platform }}</option>
+                                <option value="{{ $platform }}" @selected(old('platform', $game->platform ?? null) === $platform)>{{ $platform }}</option>
                             @endforeach
                         </select>
                     </label>
                     <label class="form-field">
                         <span>Genre <b>*</b></span>
                         <select name="genre" required>
-                            <option value="" disabled @selected(!old('genre'))>Selecteer genre</option>
+                            <option value="" disabled @selected(!old('genre', $game->genre ?? null))>Selecteer genre</option>
                             @foreach (['Actie', 'Avontuur', 'RPG', 'Indie', 'Strategie', 'Sport'] as $genre)
-                                <option value="{{ $genre }}" @selected(old('genre') === $genre)>{{ $genre }}</option>
+                                <option value="{{ $genre }}" @selected(old('genre', $game->genre ?? null) === $genre)>{{ $genre }}</option>
                             @endforeach
                         </select>
                     </label>
                     <label class="form-field">
                         <span>Releasejaar <b>*</b></span>
-                        <input name="release_year" type="number" min="1970" max="2035" required value="{{ old('release_year') }}" placeholder="Bijv. 2024">
+                        <input name="release_year" type="number" min="1970" max="2035" required value="{{ old('release_year', $game->release_year ?? '') }}" placeholder="Bijv. 2024">
                     </label>
                     <label class="form-field">
                         <span>Status <b>*</b></span>
                         <select name="status" required>
-                            <option value="" disabled @selected(!old('status'))>Selecteer status</option>
+                            <option value="" disabled @selected(!old('status', $game->status ?? null))>Selecteer status</option>
                             @foreach (['In bezit', 'Speelt nu', 'Uitgespeeld'] as $status)
-                                <option value="{{ $status }}" @selected(old('status') === $status)>{{ $status }}</option>
+                                <option value="{{ $status }}" @selected(old('status', $game->status ?? null) === $status)>{{ $status }}</option>
                             @endforeach
                         </select>
                     </label>
                     <label class="form-field">
                         <span>Beoordeling (1–10) <b>*</b></span>
-                        <div class="rating-input"><input name="rating" type="number" min="1" max="10" step="0.1" required value="{{ old('rating') }}" placeholder="Geef een score"><span>★</span></div>
+                        <div class="rating-input"><input name="rating" type="number" min="1" max="10" step="0.1" required value="{{ old('rating', $game->rating ?? '') }}" placeholder="Geef een score"><span>★</span></div>
                     </label>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="button button-primary">Opslaan</button>
+                    <button type="submit" class="button button-primary">{{ $editing ? 'Wijzigingen opslaan' : 'Opslaan' }}</button>
                     <a href="{{ route('games.index') }}" class="button button-secondary">Annuleren</a>
                 </div>
             </form>
